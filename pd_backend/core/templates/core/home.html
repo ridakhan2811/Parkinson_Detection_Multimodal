@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="text-center mb-5">
+  <h1 class="display-5 text-primary">Welcome to the Parkinson's Detection System</h1>
+  <p class="lead text-muted">Analyze handwriting, posture, and speech samples using AI.</p>
+</div>
+
+<div class="row text-center justify-content-center">
+  <!-- Speech Upload -->
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">🎙 Upload Speech Sample</h5>
+        <p class="card-text">Analyze your voice for early signs of Parkinson’s.</p>
+        <a href="{% url 'upload' %}" class="btn btn-primary">Upload Speech</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Handwriting Upload -->
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">✍️ Upload Handwriting Sample</h5>
+        <p class="card-text">Upload a drawing or handwriting image for analysis.</p>
+        <a href="{% url 'upload_image' %}" class="btn btn-success">Upload Handwriting</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Posture Upload -->
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">🧍 Upload Posture Sample</h5>
+        <p class="card-text">Use posture images to help detect Parkinson’s traits.</p>
+        <a href="{% url 'upload_posture' %}" class="btn btn-warning text-white">Upload Posture</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

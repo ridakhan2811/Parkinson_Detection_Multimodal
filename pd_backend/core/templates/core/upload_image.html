@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">🖼 Upload Image for Parkinson’s Detection</h2>
+
+{% if message %}
+  <div class="alert alert-success">{{ message }}</div>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data" class="mb-4">
+  {% csrf_token %}
+  <div class="mb-3">
+    <input type="file" name="image_file" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-success">Upload & Analyze</button>
+</form>
+
+<h3>🧠 Your Uploaded Images</h3>
+<table class="table table-bordered mt-3">
+  <thead>
+    <tr>
+      <th>Image</th>
+      <th>Prediction</th>
+      <th>Uploaded</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for sample in samples %}
+      <tr>
+        <td><img src="{{ sample.image_file.url }}" height="100" /></td>
+        <td>{{ sample.prediction|default:"Processing..." }}</td>
+        <td>{{ sample.uploaded_at }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="3">No images uploaded yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
