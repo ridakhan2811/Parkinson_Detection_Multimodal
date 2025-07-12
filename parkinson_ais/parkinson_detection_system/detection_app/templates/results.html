@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Assessment Results - ParkPredict</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light gray background */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .gradient-bg-results {
+            background: linear-gradient(to bottom right, #6a0dad, #8a2be2); /* Purple gradient */
+        }
+        .btn-home {
+            background-color: #6b7280; /* Gray */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-home:hover {
+            background-color: #4b5563; /* Darker gray on hover */
+        }
+        .results-card {
+            background-color: rgba(255, 255, 255, 0.98); /* Near opaque white */
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15); /* Stronger shadow */
+            margin-bottom: 2rem;
+            animation: fadeInScale 0.8s ease-out forwards; /* Animation for card */
+        }
+        .results-section-title {
+            font-size: 2rem; /* text-3xl */
+            font-weight: 800; /* font-extrabold */
+            margin-bottom: 1.5rem;
+            color: #6a0dad; /* Darker violet */
+            border-bottom: 2px solid #e9d5ff; /* Light purple underline */
+            padding-bottom: 0.5rem;
+        }
+        .symptom-item {
+            background-color: #f3e8ff; /* Very light purple */
+            color: #4c1d95; /* Dark purple text */
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideInLeft 0.5s ease-out forwards; /* Animation for each symptom */
+            opacity: 0; /* Start invisible for animation */
+        }
+        .symptom-item:nth-child(even) {
+            animation-delay: 0.1s; /* Stagger animation */
+        }
+        .symptom-item:nth-child(odd) {
+            animation-delay: 0.2s; /* Stagger animation */
+        }
+        .symptom-item::before {
+            content: '✅'; /* Checkmark icon */
+            font-size: 1.2rem;
+        }
+        .important-note {
+            background-color: #fffbeb; /* Light yellow background */
+            color: #92400e; /* Dark orange text */
+            border-left: 5px solid #f59e0b; /* Orange border */
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            margin-top: 2rem;
+            font-weight: 500;
+        }
+
+        /* Keyframe Animations */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .btn-all-done {
+            background-color: #22c55e; /* Green */
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 1.125rem; /* text-lg */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            display: inline-block;
+        }
+        .btn-all-done:hover {
+            background-color: #16a34a; /* Darker green on hover */
+            transform: translateY(-2px);
+        }
+
+        /* Specific animations for results page */
+        .score-animation {
+            animation: bounceIn 1s ease-out forwards; /* 'forwards' ensures it stays at the end state */
+            opacity: 0; /* Starts invisible for the animation */
+            transform: scale(0.5);
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            70% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); } /* Explicitly set opacity to 1 at the end */
+        }
+
+        .stage-animation {
+            animation: slideInRight 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .consultation-item {
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        .consultation-item:nth-child(1) { animation-delay: 0.1s; }
+        .consultation-item:nth-child(2) { animation-delay: 0.2s; }
+        .consultation-item:nth-child(3) { animation-delay: 0.3s; }
+        .consultation-item:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-4 px-6 md:px-12 flex justify-between items-center">
+        <div class="text-xl font-bold text-gray-800">Parkinson's Assessment Results</div>
+        <a href="{% url 'home' %}" class="btn-home">Back to Home</a>
+    </header>
+
+    <!-- Results Content Section -->
+    <main class="flex-grow flex flex-col items-center py-10 px-6 md:px-12 gradient-bg-results text-gray-800">
+        <div class="max-w-4xl w-full mx-auto p-8 text-center text-white mb-8">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 animate-fadeInScale">
+                Your Comprehensive Assessment Results
+            </h1>
+            <p class="text-lg md:text-xl mb-6 opacity-90 animate-fadeInScale" style="animation-delay: 0.2s;">
+                Combining your quiz responses with advanced analysis findings.
+            </p>
+            <div class="important-note animate-fadeInScale" style="animation-delay: 0.4s;">
+                <strong>Disclaimer:</strong> This assessment is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
+            </div>
+        </div>
+
+        <div class="max-w-4xl w-full mx-auto">
+            <!-- Overall Score/Indication -->
+            <div class="results-card score-animation" style="animation-delay: 0.6s;">
+                <h2 class="results-section-title">Overall Indication Score</h2>
+                <p class="text-gray-700 text-lg mb-4">
+                    Based on the combined analysis of your quiz answers and uploaded files, your preliminary indication score is:
+                </p>
+                <p class="text-purple-700 text-6xl font-extrabold p-4 bg-purple-50 rounded-xl inline-block">
+                    {{ overall_score }}%
+                </p>
+                <p class="text-gray-600 mt-4">
+                    (Higher score indicates more symptoms/markers detected)
+                </p>
+            </div>
+
+            <!-- Identified Symptoms Section (from Quiz) -->
+            <div class="results-card" style="animation-delay: 0.8s;">
+                <h2 class="results-section-title">Symptoms Reported in Quiz</h2>
+                {% if quiz_identified_symptoms %}
+                    <ul class="list-none p-0">
+                        {% for symptom in quiz_identified_symptoms %}
+                            <li class="symptom-item">{{ symptom }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-700">No specific symptoms were indicated in your questionnaire responses.</p>
+                {% endif %}
+            </div>
+
+            <!-- Analysis Findings Section -->
+            <div class="results-card" style="animation-delay: 1.0s;">
+                <h2 class="results-section-title">Analysis Findings from Uploaded Files</h2>
+                {% if analysis_findings %}
+                    <ul class="list-none p-0">
+                        {% for finding in analysis_findings %}
+                            <li class="symptom-item bg-blue-50 text-blue-800 border-blue-200">🔬 {{ finding }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-700">No specific findings from the uploaded files (or files not provided).</p>
+                {% endif %}
+            </div>
+
+            <!-- Potential Stage Section -->
+            <div class="results-card stage-animation" style="animation-delay: 1.2s;">
+                <h2 class="results-section-title">Preliminary Indication & Potential Stage</h2>
+                <p class="text-gray-700 text-lg mb-4">
+                    Based on all collected data, here is a preliminary indication:
+                </p>
+                <p class="text-purple-700 text-xl font-bold p-4 bg-purple-50 rounded-xl">
+                    {{ potential_stage }}
+                </p>
+                <p class="text-gray-700 mt-4">
+                    {{ stage_description }}
+                </p>
+            </div>
+
+            <!-- Kind of Parkinson's (Highly Emphasized Disclaimer) -->
+            <div class="results-card" style="animation-delay: 1.4s;">
+                <h2 class="results-section-title">Potential Type of Parkinson's (Requires Medical Diagnosis)</h2>
+                <p class="text-red-600 text-lg font-semibold mb-4">
+                    <strong class="text-red-800">IMPORTANT:</strong> Determining the specific type of Parkinson's disease or related conditions requires extensive medical evaluation, including neurological examinations and potentially imaging. This assessment provides a *preliminary indication only* and is not a diagnosis.
+                </p>
+                <p class="text-gray-700 text-lg p-4 bg-gray-50 rounded-xl whitespace-pre-line">
+                    {{ kind_of_parkinsons }}
+                </p>
+            </div>
+
+            <!-- Next Steps: Consulting a Doctor Section -->
+            <div class="results-card" style="animation-delay: 1.6s;">
+                <h2 class="results-section-title">Next Steps: Professional Medical Consultation</h2>
+                <p class="text-gray-700 mb-4">
+                    If you have concerns about Parkinson's disease or any of the symptoms you've experienced, it is crucial to consult a healthcare professional.
+                </p>
+                <p class="text-gray-700 font-semibold mb-2">
+                    Recommended Specialist: <span class="text-purple-700">{{ doctor_type }}</span>
+                </p>
+                <ul class="list-disc list-inside text-gray-700 space-y-2 mb-6">
+                    {% for step in next_steps_advice %}
+                        <li class="consultation-item">{{ step }}</li>
+                    {% endfor %}
+                </ul>
+                <div class="text-center mt-6">
+                    <a href="https://www.parkinson.org/understanding-parkinsons/diagnosis" target="_blank" class="bg-purple-700 text-white py-3 px-6 rounded-full font-semibold transition duration-300 hover:bg-purple-800 shadow-md">
+                        Learn More About Parkinson's Diagnosis
+                    </a>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a href="{% url 'thank_you' %}" class="btn-all-done">All Done!</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-500 py-6 text-center text-sm mt-auto">
+        &copy; 2024 ParkPredict.
+    </footer>
+
+</body>
+</html>
