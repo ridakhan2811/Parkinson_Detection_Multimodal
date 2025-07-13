@@ -1,16 +1,14 @@
-# detection_app/urls.py
-
 from django.urls import path
-from . import views # Import your views from the current app
+from . import views
 
 urlpatterns = [
-    path('', views.home, name='home'), # Maps the root URL of the app to the home view (your index.html)
-    path('quiz/', views.quiz, name='quiz'), # Maps /quiz/ to the quiz view
-    path('results/', views.results, name='results'), # URL for results page
-    path('upload-assessment/', views.upload_assessment, name='upload_assessment'), # URL for upload page
-    path('thank-you/', views.thank_you, name='thank_you'), # URL for thank you page
-    path('register/', views.register_view, name='register'), # URL for registration page
-    path('login/', views.login_view, name='login'), # URL for login page
-    path('logout/', views.logout_view, name='logout'), # URL for logout
-    path('demo-video/', views.demo_video_view, name='demo_video'), # URL for demo video page
+    path('', views.home, name='home'),  # Home page
+    path('quiz/', views.quiz, name='quiz'),  # Quiz form page
+    path('results/', views.results, name='results'),  # (Optional) results with full symptom+analysis output
+    path('upload-assessment/', views.upload_assessment, name='upload_assessment'),  # Handles quiz + prediction logic
+    path('thank-you/', views.thank_you, name='thank_you'),  # Thank you page after quiz
+    path('register/', views.register_view, name='register'),  # Register
+    path('login/', views.login_view, name='login'),  # Login
+    path('logout/', views.logout_view, name='logout'),  # Logout
+    path('demo-video/', views.demo_video_view, name='demo_video'),  # Demo video
 ]

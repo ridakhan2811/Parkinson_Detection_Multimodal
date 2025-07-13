@@ -1,43 +1,57 @@
 # detection_app/views.py
 
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate # Import authenticate
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django import forms # Import forms to define custom widgets
-from django.contrib import messages # Import the messages framework
+from django import forms
+from django.contrib import messages
+from .quiz_data import questions, option_choices # Import option_choices now
 
-# Define custom forms for styling
+import joblib
+import numpy as np
+import os
+
+# Define paths for model and encoder
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "parkinsons_stage_model.joblib")
+ENCODER_PATH = os.path.join(os.path.dirname(__file__), "label_encoder.joblib")
+
+stage_model = None
+label_encoder = None
+
+try:
+    stage_model = joblib.load(MODEL_PATH)
+    label_encoder = joblib.load(ENCODER_PATH)
+    print("✅ Models loaded successfully!")
+    print(f"Label Encoder Classes: {label_encoder.classes_}")
+    print(f"Model expected features (n_features_in_): {stage_model.n_features_in_}")
+
+except Exception as e:
+    stage_model = None
+    label_encoder = None
+    print(f"⚠️ Model or Encoder loading failed: {e}")
+
+# ---------------------------- Forms ----------------------------------
+
 class CustomAuthenticationForm(AuthenticationForm):
-    """
-    Custom form for user login to apply specific styling.
-    """
-    username = forms.CharField(
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Enter your username or email', # Updated placeholder
-            'class': 'input-field' # Use 'input-field' as per your HTML
-        })
-    )
-    password = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'placeholder': 'Enter your password',
-            'class': 'input-field' # Use 'input-field' as per your HTML
-        })
-    )
+    username = forms.CharField(widget=forms.TextInput(attrs={
+        'placeholder': 'Enter your username or email',
+        'class': 'input-field'
+    }))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'placeholder': 'Enter your password',
+        'class': 'input-field'
+    }))
 
 class CustomUserCreationForm(UserCreationForm):
-    """
-    Custom form for user registration to apply specific styling.
-    """
     class Meta(UserCreationForm.Meta):
         model = UserCreationForm.Meta.model
         fields = ('username',) + UserCreationForm.Meta.fields[1:]
-        # Define widgets directly in Meta to ensure they are initialized correctly
         widgets = {
             'username': forms.TextInput(attrs={
                 'placeholder': 'Enter your username',
                 'class': 'input-field'
             }),
-            'password': forms.PasswordInput(attrs={
+            'password1': forms.PasswordInput(attrs={
                 'placeholder': 'Enter your password',
                 'class': 'input-field'
             }),
@@ -47,234 +61,260 @@ class CustomUserCreationForm(UserCreationForm):
             }),
         }
 
+# ---------------------------- Views ----------------------------------
 
 def home(request):
-    """
-    Renders the landing page (index.html) of the Parkinson's Detection System.
-    The request.user object is automatically available in templates if
-    'django.contrib.auth.context_processors.auth' is in TEMPLATES['OPTIONS']['context_processors']
-    in settings.py, which it is by default.
-    """
-    return render(request, 'index.html')
+    return render(request, 'detection_app/index.html')
 
 def quiz(request):
     """
-    Renders the placeholder page for the Parkinson's Detection Quiz.
-    This is where the actual quiz logic would be implemented.
+    Renders the quiz with questions grouped into 5 sections (4 questions each)
     """
-    return render(request, 'quiz.html')
-
-def results(request):
-    """
-    Renders the results page, displaying symptoms based on quiz answers and analysis findings.
-    """
-    # Get all data from query parameters (quiz answers + analysis results)
-    all_data = request.GET.dict()
-
-    # --- Process Quiz-based Symptoms ---
-    symptom_map = {
-        'tremor': "Tremors (shaking, especially at rest)",
-        'bradykinesia': "Slowness of movement (bradykinesia)",
-        'rigidity': "Stiffness or rigidity in limbs/trunk",
-        'postural_instability': "Problems with balance or increased tendency to fall",
-        'gait_changes': "Changes in walking (shuffling, reduced arm swing)",
-        'stooped_posture': "Stooped or leaning forward posture",
-        'facial_masking': "Less animated or 'mask-like' facial expression",
-        'arm_swing_reduction': "Reduced arm swing when walking",
-        'handwriting_changes_general': "General changes in handwriting (less clear/difficult to read)",
-        'micrographia_detailed': "Handwriting becoming progressively smaller (micrographia)",
-        'finger_tapping': "Difficulty with rapid, repetitive movements with fingers",
-        'buttoning_difficulty': "Difficulty with fine motor tasks (buttoning, tying laces)",
-        'speech_changes': "Softer, hoarser, or more monotone voice (dysphonia)",
-        'smell_loss': "Loss or reduction in sense of smell (anosmia)",
-        'sleep_disorder': "Vivid dreams that cause you to act out physically during sleep (e.g., kicking, punching, shouting)",
-        'daytime_sleepiness': "Excessive daytime sleepiness",
-        'vision_changes': "Changes in vision (double vision, difficulty reading)",
-        'constipation': "Frequent constipation",
-        'mood_changes': "Persistent feelings of depression, anxiety, or apathy",
-        'memory_issues': "Problems with memory, attention, or decision-making",
-        'dizziness': "Dizziness or lightheadedness, especially when standing up",
-        'other_symptoms': "Other reported symptoms" # Added for the 'other_symptoms' textarea
-    }
-
-    quiz_identified_symptoms = []
-    for key, description in symptom_map.items():
-        if all_data.get(key) == 'yes':
-            quiz_identified_symptoms.append(description)
-            # Add details if available
-            detail_key = f"{key}_details"
-            if all_data.get(detail_key) and all_data.get(detail_key).strip():
-                quiz_identified_symptoms.append(f"  - Details: {all_data.get(detail_key)}")
-        elif key == 'other_symptoms' and all_data.get(key) and all_data.get(key).strip():
-            quiz_identified_symptoms.append(f"Other reported symptoms: {all_data.get(key)}")
-
-
-    # --- Process Analysis Findings (Simulated) ---
-    analysis_findings = []
-    # Check for specific analysis findings and add them
-    if all_data.get('analysis_speech_tremor') == 'detected':
-        analysis_findings.append("Speech Tremor Detected (from voice analysis)")
-    if all_data.get('analysis_spiral_irregularity') == 'moderate':
-        analysis_findings.append("Moderate Irregularity in Spiral Drawing (from spiral analysis)")
-    if all_data.get('analysis_spiral_irregularity') == 'severe':
-        analysis_findings.append("Severe Irregularity in Spiral Drawing (from spiral analysis)")
-    if all_data.get('analysis_gait_instability') == 'mild':
-        analysis_findings.append("Mild Gait Instability Detected (from posture video)")
-    if all_data.get('analysis_gait_instability') == 'moderate':
-        analysis_findings.append("Moderate Gait Instability Detected (from posture video)")
-    if all_data.get('analysis_facial_masking') == 'subtle':
-        analysis_findings.append("Subtle Facial Masking Indicated (from posture video)")
-    if all_data.get('analysis_facial_masking') == 'pronounced':
-        analysis_findings.append("Pronounced Facial Masking Indicated (from posture video)")
-    if all_data.get('analysis_handwriting_micrographia') == 'present':
-        analysis_findings.append("Micrographia Present (from handwriting analysis)")
-
-    overall_score = int(all_data.get('analysis_overall_score', 0)) # Get analysis score
-
-    # Combine all symptoms for overall assessment (using a set to ensure uniqueness)
-    all_symptoms = list(set(quiz_identified_symptoms + analysis_findings))
-    all_symptoms.sort() # Sort for consistent display
-
-    # --- Determine Potential Indication Level and Consultation Advice ---
-    num_total_indications = len(all_symptoms)
-    
-    consultation_advice = {
-        'level': "No significant indications",
-        'stage_description': "Based on the assessment, there are no significant indications of Parkinson's-like symptoms. However, if you have persistent health concerns, it's always best to consult a healthcare professional.",
-        'doctor_type': "Primary Care Physician",
-        'next_steps': [
-            "Maintain a healthy lifestyle.",
-            "Monitor any new or worsening symptoms.",
-            "Discuss any general health concerns with your primary care physician during your next routine check-up."
-        ]
-    }
-
-    if overall_score >= 80 or num_total_indications >= 8:
-        consultation_advice['level'] = "High Indication - Urgent Consultation Recommended"
-        consultation_advice['stage_description'] = "The assessment indicates a high number of symptoms and markers consistent with Parkinson's disease. **Immediate consultation with a Neurologist specializing in Movement Disorders is strongly recommended.**"
-        consultation_advice['doctor_type'] = "Neurologist (Movement Disorders Specialist)"
-        consultation_advice['next_steps'] = [
-            "Schedule an urgent appointment with a Movement Disorders Specialist.",
-            "Prepare a detailed history of all symptoms, their onset, and progression. Include any family history.",
-            "Be ready to discuss medications you are currently taking.",
-            "Consider bringing a family member or close friend to the appointment for additional observations and support."
-        ]
-    elif overall_score >= 60 or num_total_indications >= 5:
-        consultation_advice['level'] = "Moderate Indication - Specialist Consultation Advised"
-        consultation_advice['stage_description'] = "The assessment shows a moderate number of symptoms and markers that warrant further investigation. **Consultation with a Neurologist is highly advised for a comprehensive evaluation.**"
-        consultation_advice['doctor_type'] = "Neurologist"
-        consultation_advice['next_steps'] = [
-            "Make an appointment with a Neurologist.",
-            "Document all your symptoms, including when they started and how they affect your daily life.",
-            "Discuss the results of this assessment with your doctor.",
-            "Follow any recommendations for further tests or evaluations."
-        ]
-    elif overall_score >= 40 or num_total_indications >= 2:
-        consultation_advice['level'] = "Mild Indication - Discuss with Primary Care"
-        consultation_advice['stage_description'] = "A few symptoms or markers were noted. While not strongly indicative of Parkinson's, it's advisable to discuss these findings with your primary care physician for initial guidance and monitoring."
-        consultation_advice['doctor_type'] = "Primary Care Physician"
-        consultation_advice['next_steps'] = [
-            "Schedule an appointment with your primary care physician.",
-            "Share the results of this assessment and your concerns.",
-            "Your doctor may recommend monitoring, lifestyle changes, or a referral to a specialist if symptoms persist or worsen."
-        ]
-
-    # Placeholder for "kind of Parkinson's" - emphasize it's not a diagnosis
-    kind_of_parkinsons = "Determining the specific type of Parkinson's disease or related conditions requires extensive medical evaluation, including neurological examinations and potentially imaging. This assessment provides a *preliminary indication only* and is not a diagnosis."
-    if overall_score >= 70 and 'tremor' in all_data and all_data.get('tremor') == 'yes':
-        kind_of_parkinsons += "\n\nBased on prominent tremor, the doctor might consider Tremor-Dominant Parkinson's Disease, but this needs professional confirmation."
-    elif overall_score >= 70 and 'bradykinesia' in all_data and all_data.get('bradykinesia') == 'yes' and 'rigidity' in all_data and all_data.get('rigidity') == 'yes':
-        kind_of_parkinsons += "\n\nBased on significant slowness and stiffness, the doctor might consider Postural Instability and Gait Difficulty (PIGD) dominant Parkinson's Disease, but this needs professional confirmation."
-
-
+    grouped_questions = [questions[i:i + 4] for i in range(0, len(questions), 4)]
     context = {
-        'quiz_identified_symptoms': quiz_identified_symptoms,
-        'analysis_findings': analysis_findings,
-        'all_symptoms': all_symptoms, # Combined list for display
-        'potential_stage': consultation_advice['level'], # Renamed for clarity in template
-        'stage_description': consultation_advice['stage_description'],
-        'doctor_type': consultation_advice['doctor_type'],
-        'next_steps_advice': consultation_advice['next_steps'],
-        'kind_of_parkinsons': kind_of_parkinsons,
-        'overall_score': overall_score,
-        'quiz_data': all_data # For debugging or displaying raw data if needed
+        'question_pages': grouped_questions,
+        'option_choices': option_choices, # Use the imported option_choices
     }
-    return render(request, 'results.html', context)
+    return render(request, 'detection_app/quiz.html', context)
 
 def upload_assessment(request):
     """
-    Renders the page for uploading handwriting, speech, and posture files.
+    Handles quiz submission, processes the POST request, performs prediction,
+    and renders the result page with only the predicted stage and consultation advice.
     """
-    quiz_data = request.GET.dict()
+    if request.method == "POST":
+        user_inputs = []
+
+        # Define the ordinal mapping as used in your Colab notebook for consistency
+        # {"Never": 0, "Rarely": 1, "Sometimes": 2, "Often": 3, "Always": 4}
+        ordinal_map_django = {
+            "never": 0,
+            "rarely": 1,
+            "sometimes": 2,
+            "often": 3,
+            "always": 4
+        }
+
+        # These keys now match the 'name' attributes from quiz_data.py
+        question_keys = [f"q{i}" for i in range(1, 21)] # Generates "q1", "q2", ..., "q20"
+
+        # Process quiz answers
+        for key in question_keys:
+            value = request.POST.get(key, '').lower()
+            # Use .get() with a default value to handle missing keys gracefully (e.g., if a question was skipped)
+            # If a value is not in ordinal_map_django, default to 0 (Never) or handle as an error
+            user_inputs.append(ordinal_map_django.get(value, 0)) # Default to 0 if not found
+
+        # Initialize core context variables with default values
+        predicted_stage_text = "Not Assessed"
+        main_result_message = "Assessment Incomplete" # New variable for main message
+        stage_description = "Please complete the assessment quiz for a preliminary indication."
+        doctor_type = "Neurologist"
+        next_steps_advice = [
+            "Schedule an appointment with a neurologist for a professional evaluation.",
+            "Prepare a detailed list of your symptoms and their onset for your doctor.",
+            "Discuss any family history of neurological conditions.",
+            "Do not self-diagnose or alter any medication based on this assessment."
+        ]
+        consolation_message = "Thank you for completing the assessment. Remember, early information is a step towards better health." # Default consolation
+
+        # Attempt to make a prediction if model is available and inputs are correct
+        if stage_model and label_encoder:
+            try:
+                # Reshape for single prediction
+                prediction_array = np.array(user_inputs).reshape(1, -1)
+
+                # --- START DEBUGGING PRINTS ---
+                print(f"\n--- Prediction Debugging ---")
+                print(f"Raw user_inputs (length {len(user_inputs)}): {user_inputs}")
+                print(f"Numpy array for prediction (shape {prediction_array.shape}):\n{prediction_array}")
+                print(f"Model expected features (n_features_in_): {stage_model.n_features_in_}")
+                # --- END DEBUGGING PRINTS ---
+
+                if len(user_inputs) == stage_model.n_features_in_:
+                    # No scaler application, as per your Colab notebook
+                    prediction = stage_model.predict(prediction_array)[0]
+                    predicted_stage_text = label_encoder.inverse_transform([prediction])[0]
+
+                    # --- START DEBUGGING PRINTS ---
+                    print(f"Raw numerical prediction (index): {prediction}")
+                    print(f"Inverse transformed prediction text: {predicted_stage_text}")
+                    print(f"--- End Prediction Debugging ---\n")
+                    # --- END DEBUGGING PRINTS ---
+                    
+                    # Refine messages based on the predicted_stage_text for all 6 stages
+                    if "No Parkinson" in predicted_stage_text or "No PD" in predicted_stage_text or "Healthy" in predicted_stage_text:
+                        main_result_message = "Fantastic News! Your assessment indicates a low likelihood of Parkinson's symptoms."
+                        stage_description = "This is a great sign! Continue to prioritize your health and well-being. Remember, this assessment is preliminary; consult a doctor if any concerns arise."
+                        doctor_type = "General Practitioner (for routine check-ups)"
+                        next_steps_advice = [
+                            "Maintain a healthy and active lifestyle with regular exercise and a balanced diet.",
+                            "Stay vigilant for any new or unusual health changes and consult your doctor if they occur.",
+                            "Consider regular wellness check-ups with your general practitioner for overall health maintenance."
+                        ]
+                        consolation_message = "Wonderful news! Your commitment to health is admirable. Keep shining brightly! Remember to enjoy life's simple pleasures and stay positive."
+                    elif "Stage 1" in predicted_stage_text:
+                        main_result_message = "Preliminary Indication: Early Stage Symptoms for Parkinson's Detected."
+                        stage_description = "Early detection is crucial. Consulting a neurologist promptly can help in confirming diagnosis and discussing early management strategies to maintain quality of life."
+                        doctor_type = "Neurologist (Specialist)"
+                        next_steps_advice = [
+                            "Schedule an appointment with a neurologist as soon as possible for a definitive diagnosis.",
+                            "Prepare a detailed list of your symptoms, their onset, and any family history for your doctor.",
+                            "Discuss potential early interventions, lifestyle adjustments, and therapeutic options.",
+                            "Do not self-diagnose or alter any medication based on this assessment."
+                        ]
+                        consolation_message = "Remember, you're not alone on this journey. Every step forward, no matter how small, is progress. Focus on self-care and lean on your support system. We're here to support you."
+                    elif "Stage 2" in predicted_stage_text:
+                        main_result_message = "Preliminary Indication: Moderate Stage Symptoms for Parkinson's Detected."
+                        stage_description = "It's important to consult a neurologist for a comprehensive evaluation. Effective treatments are available to manage symptoms and improve daily living."
+                        doctor_type = "Neurologist (Specialist)"
+                        next_steps_advice = [
+                            "Seek consultation with a neurologist for a thorough diagnosis and treatment plan.",
+                            "Discuss medication options and non-pharmacological therapies (e.g., physical therapy, occupational therapy).",
+                            "Explore local support groups and educational resources for Parkinson's patients and caregivers.",
+                            "Ensure regular follow-up appointments with your medical team to adjust treatment as needed."
+                        ]
+                        consolation_message = "Your strength is inspiring. Focus on self-care and lean on your support system. Brighter days are ahead, and every effort counts. Keep your spirits high!"
+                    elif "Stage 3" in predicted_stage_text:
+                        main_result_message = "Preliminary Indication: Mid-to-Advanced Stage Symptoms for Parkinson's Detected."
+                        stage_description = "Symptoms may be more noticeable at this stage. A neurologist can guide you on advanced management strategies and therapies to improve mobility and quality of life."
+                        doctor_type = "Neurologist (Specialist)"
+                        next_steps_advice = [
+                            "Arrange an urgent consultation with a neurologist specializing in movement disorders.",
+                            "Discuss advanced treatment options and multidisciplinary care approaches (e.g., speech therapy, dietetics).",
+                            "Consider home modifications or assistive devices to enhance safety and independence.",
+                            "Engage with support networks for emotional and practical guidance."
+                        ]
+                        consolation_message = "Take a deep breath. You possess incredible resilience. Focus on what brings you comfort and peace, and remember that support is always available."
+                    elif "Stage 4" in predicted_stage_text:
+                        main_result_message = "Preliminary Indication: Advanced Stage Symptoms for Parkinson's Detected."
+                        stage_description = "At this stage, symptoms are significant. Immediate consultation with a neurologist is vital to optimize treatment, manage complications, and ensure comprehensive support."
+                        doctor_type = "Neurologist (Specialist)"
+                        next_steps_advice = [
+                            "Seek immediate medical attention from a neurologist for comprehensive care planning.",
+                            "Discuss options for managing severe motor and non-motor symptoms.",
+                            "Consider palliative care or hospice care options to enhance comfort and quality of life.",
+                            "Ensure a strong support system is in place, including family, caregivers, and medical professionals."
+                        ]
+                        consolation_message = "Even in challenging times, remember your inner strength. Focus on moments of joy and connection, and know that you are surrounded by care."
+                    elif "Stage 5" in predicted_stage_text:
+                        main_result_message = "Preliminary Indication: Very Advanced Stage Symptoms for Parkinson's Detected."
+                        stage_description = "This indicates very advanced symptoms requiring intensive medical and supportive care. A neurologist can help in managing complex symptoms and ensuring comfort."
+                        doctor_type = "Neurologist (Specialist) & Multidisciplinary Care Team"
+                        next_steps_advice = [
+                            "Urgent consultation with a neurologist and a multidisciplinary care team is essential.",
+                            "Focus on comprehensive symptom management, comfort, and quality of life.",
+                            "Discuss advanced care planning and support services for both the patient and caregivers.",
+                            "Connect with specialized Parkinson's care centers for expert management."
+                        ]
+                        consolation_message = "Your journey is unique, and your courage shines brightly. Embrace moments of peace and know you are supported every step of the way."
+                    else: # Fallback for any unexpected stage outputs
+                        main_result_message = "Assessment Complete. Further Evaluation Recommended."
+                        stage_description = "The assessment provides a preliminary indication. For a definitive diagnosis and personalized advice, a professional medical consultation is essential."
+                        doctor_type = "Neurologist"
+                        consolation_message = "Thank you for completing the assessment. Remember, early information is a step towards better health."
+
+
+                else:
+                    messages.error(request, f"Error: Quiz answers count ({len(user_inputs)}) does not match model's expected features ({stage_model.n_features_in_}).")
+                    print(f"Error: Expected {stage_model.n_features_in_} features, got {len(user_inputs)}")
+                    main_result_message = "Processing Error"
+                    predicted_stage_text = "Error"
+                    stage_description = "There was an issue processing your quiz answers. Please try again or contact support."
+                    consolation_message = "We encountered an issue. Please try again or reach out for support."
+
+            except Exception as e:
+                messages.error(request, f"An error occurred during prediction: {e}")
+                print(f"Prediction error: {e}")
+                main_result_message = "Prediction Error"
+                predicted_stage_text = "Error"
+                stage_description = "An error occurred during prediction. Please try again or contact support."
+                consolation_message = "An unexpected error occurred. Your well-being is important; please try again or contact support."
+        else:
+            messages.warning(request, "Prediction model not available. Results are based on default values.")
+            print("Model or encoder not loaded.")
+            main_result_message = "Model Not Loaded"
+            predicted_stage_text = "Not Available"
+            stage_description = "The prediction model could not be loaded. Please contact the administrator."
+            consolation_message = "Our system is experiencing technical difficulties. We apologize for the inconvenience."
+
+
+        # Prepare context for results.html with only the required data
+        context = {
+            'main_result_message': main_result_message,
+            'potential_stage': predicted_stage_text,
+            'stage_description': stage_description,
+            'doctor_type': doctor_type,
+            'next_steps_advice': next_steps_advice,
+            'consolation_message': consolation_message, # New variable added to context
+        }
+    return render(request, 'detection_app/results.html', context)
+
+def results(request):
+    """
+    This view is a fallback or for direct access to /results/.
+    It provides default context for only the required fields.
+    """
     context = {
-        'quiz_data': quiz_data
+        'main_result_message': "No Data Submitted", # Default for direct access
+        'potential_stage': "No Data Submitted",
+        'stage_description': "Please complete the assessment quiz to see your personalized results.",
+        'doctor_type': "N/A",
+        'next_steps_advice': ["Return to the quiz to start the assessment."],
+        'consolation_message': "Welcome! Please complete the assessment to receive personalized insights.", # Default for direct access
     }
-    return render(request, 'upload_assessment.html', context)
+    return render(request, 'detection_app/results.html', context)
+
 
 def thank_you(request):
-    """
-    Renders the thank you page after quiz completion.
-    """
-    return render(request, 'thank_you.html')
+    return render(request, 'detection_app/thank_you.html')
+
+# -------------------------- Auth Views ----------------------------
 
 def register_view(request):
-    """
-    Handles user registration.
-    """
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user) # Log the user in immediately after registration
+            login(request, user)
             messages.success(request, 'Account created successfully! Welcome to ParkPredict.')
-            return redirect('home') # Redirect to home page after successful registration
+            return redirect('home')
         else:
-            # Display form errors to the user
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"Error in {field}: {error}")
             messages.error(request, 'Please correct the errors below.')
     else:
         form = CustomUserCreationForm()
-    return render(request, 'register.html', {'form': form})
+    return render(request, 'detection_app/register.html', {'form': form})
 
 def login_view(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=username, password=password)
+            user = authenticate(
+                request,
+                username=form.cleaned_data.get('username'),
+                password=form.cleaned_data.get('password')
+            )
             if user is not None:
-                login(request, user) # This sets the user in the session
+                login(request, user)
                 messages.success(request, f'Login successful! Welcome back, {user.username}.')
-                return redirect('home') # Redirects to the URL named 'home' (which is '/')
+                return redirect('home')
             else:
-                messages.error(request, 'Invalid username or password. Please try again.')
+                messages.error(request, 'Invalid credentials.')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"Error in {field}: {error}")
-            messages.error(request, 'Please correct the errors below.')
     else:
         form = CustomAuthenticationForm()
-    return render(request, 'login.html', {'form': form})
+    return render(request, 'detection_app/login.html', {'form': form})
 
 def logout_view(request):
-    logout(request) # This clears the user from the session
-    messages.info(request, 'You have been logged out.')
-    return redirect('home') # Redirects to the URL named 'home' (which is '/')
-
-def logout_view(request):
-    """
-    Handles user logout.
-    """
     logout(request)
     messages.info(request, 'You have been logged out.')
-    return redirect('home') # Redirect to home page after logout
+    return redirect('home')
 
 def demo_video_view(request):
-    """
-    Renders the page to display the YouTube demo video.
-    """
-    return render(request, 'demo_video.html')
+    return render(request, 'detection_app/demo_video.html')
