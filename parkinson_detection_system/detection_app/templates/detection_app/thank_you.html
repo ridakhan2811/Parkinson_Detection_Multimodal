@@ -1,0 +1,231 @@
+<!-- detection_app/templates/thank_you.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You! - ParkPredict</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light gray background */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden; /* Hide overflow for background animations */
+        }
+        .gradient-bg-thankyou {
+            background: linear-gradient(135deg, #8a2be2, #6a0dad, #4b0082); /* More colors for gradient shift */
+            background-size: 400% 400%; /* Larger background for animation */
+            position: relative; /* For positioning particles */
+            z-index: 0;
+            animation: gradient-shift 15s ease infinite alternate; /* New gradient animation */
+        }
+        .thankyou-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative; /* To keep content above particles */
+            z-index: 1;
+            opacity: 0; /* Start hidden for initial animation */
+            transform: translateY(30px); /* Start slightly below */
+            animation: container-slide-in 1s ease-out forwards; /* Overall container animation */
+            animation-delay: 0.5s; /* Delay to appear after body loads */
+        }
+        .thankyou-message {
+            font-size: 3rem; /* text-5xl */
+            font-weight: 800; /* font-extrabold */
+            color: white;
+            margin-bottom: 1.5rem;
+            overflow: hidden; /* Hide overflow for text animation */
+            white-space: nowrap; /* Keep text on one line */
+            border-right: .15em solid orange; /* The caret */
+            position: relative; /* For z-index */
+            z-index: 2;
+            /* Combined animations: typing, blink-caret, and pulse after typing */
+            animation: typing 3s steps(40, end) forwards,
+                       blink-caret .75s step-end infinite,
+                       pulse 1.5s infinite alternate 3s forwards; /* Pulse starts after typing ends */
+        }
+        /* Typing animation */
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        /* Blinking caret animation */
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: orange; }
+        }
+        /* New pulse animation for the message */
+        @keyframes pulse {
+            0% { transform: scale(1); text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+            50% { transform: scale(1.02); text-shadow: 0 0 15px rgba(255,255,255,0.8); }
+            100% { transform: scale(1); text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+        }
+
+        .sub-message {
+            font-size: 1.5rem; /* text-2xl */
+            color: #e9d5ff; /* Light purple */
+            margin-bottom: 3rem;
+            animation: fadeIn 1.5s ease-out forwards;
+            animation-delay: 3.5s; /* Start after typing animation and initial container load */
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .contact-section {
+            background-color: rgba(255, 255, 255, 0.1); /* Slightly transparent white */
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 600px;
+            animation: slideInUp 1s ease-out forwards;
+            animation-delay: 4.0s; /* Start after sub-message */
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            color: white;
+            font-size: 1.125rem; /* text-lg */
+            margin-bottom: 1rem;
+            opacity: 0; /* Start invisible for staggered animation */
+            animation: fadeInItem 0.6s ease-out forwards;
+        }
+        .contact-item:nth-child(1) { animation-delay: 4.5s; } /* Adjusted delays */
+        .contact-item:nth-child(2) { animation-delay: 4.7s; }
+        .contact-item:nth-child(3) { animation-delay: 4.9s; }
+        .contact-item:nth-child(4) { animation-delay: 5.1s; }
+
+        @keyframes fadeInItem {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .contact-item a {
+            color: #a78bfa; /* Purple-300 */
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .contact-item a:hover {
+            color: #c4b5fd; /* Purple-200 */
+            text-decoration: underline;
+        }
+        .icon {
+            font-size: 1.5rem;
+            color: #e9d5ff; /* Light purple */
+        }
+
+        /* Floating Particles Background */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0; /* Behind content */
+        }
+        .particles li {
+            position: absolute;
+            display: block;
+            list-style: none;
+            background: rgba(255, 255, 255, 0.2); /* White with transparency */
+            animation: float 20s linear infinite;
+            bottom: -150px;
+            border-radius: 50%; /* Make them circles */
+        }
+        .particles li:nth-child(1) { left: 25%; width: 30px; height: 30px; animation-delay: 0s; animation-duration: 15s; }
+        .particles li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+        .particles li:nth-child(3) { left: 70%; width: 40px; height: 40px; animation-delay: 4s; animation-duration: 18s; }
+        .particles li:nth-child(4) { left: 40%; width: 25px; height: 25px; animation-delay: 0s; animation-duration: 10s; }
+        .particles li:nth-child(5) { left: 65%; width: 50px; height: 50px; animation-delay: 3s; animation-duration: 20s; }
+        .particles li:nth-child(6) { left: 75%; width: 20px; height: 20px; animation-delay: 5s; animation-duration: 14s; }
+        .particles li:nth-child(7) { left: 30%; width: 35px; height: 35px; animation-delay: 1s; animation-duration: 16s; }
+        .particles li:nth-child(8) { left: 80%; width: 25px; height: 25px; animation-delay: 7s; animation-duration: 13s; }
+        .particles li:nth-child(9) { left: 15%; width: 45px; height: 45px; animation-delay: 6s; animation-duration: 19s; }
+        .particles li:nth-child(10) { left: 55%; width: 30px; height: 30px; animation-delay: 2.5s; animation-duration: 11s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-1000px) rotate(360deg); opacity: 0; }
+        }
+
+        /* New: Gradient Shift Animation */
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* New: Container Slide In Animation */
+        @keyframes container-slide-in {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased gradient-bg-thankyou">
+
+    <!-- Floating Particles Background -->
+    <ul class="particles">
+        <li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li>
+    </ul>
+
+    <main class="thankyou-container">
+        <h1 class="thankyou-message" id="thankYouText">Thank you for participating!</h1>
+        <p class="sub-message">Your contribution helps us improve and understand more.</p>
+
+        <div class="contact-section">
+            <h2 class="text-2xl font-bold text-white mb-4">Connect With Us</h2>
+            <div class="contact-item">
+                <span class="icon">📧</span>
+                <a href="mailto:support@parkpredict.com">support@parkpredict.com</a>
+            </div>
+            <div class="contact-item">
+                <span class="icon">🔗</span>
+                <a href="https://www.linkedin.com/company/parkpredict" target="_blank">LinkedIn/ParkPredict</a>
+            </div>
+            <div class="contact-item">
+                <span class="icon">🌐</span>
+                <a href="{% url 'home' %}">parkpredict.com</a>
+            </div>
+            <div class="contact-item">
+                <span class="icon">📞</span>
+                <span>+1 (123) 456-7890</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-500 py-6 text-center text-sm">
+        &copy; 2024 ParkPredict. All rights reserved.
+    </footer>
+
+</body>
+</html>
