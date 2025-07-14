@@ -6,7 +6,8 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django import forms
 from django.contrib import messages
 from .quiz_data import questions, option_choices # Import option_choices now
-
+from .models import AssessmentResult
+from django.contrib.auth.decorators import login_required
 import joblib
 import numpy as np
 import os
@@ -65,7 +66,7 @@ class CustomUserCreationForm(UserCreationForm):
 
 def home(request):
     return render(request, 'detection_app/index.html')
-
+@login_required
 def quiz(request):
     """
     Renders the quiz with questions grouped into 5 sections (4 questions each)
@@ -237,7 +238,40 @@ def upload_assessment(request):
             predicted_stage_text = "Not Available"
             stage_description = "The prediction model could not be loaded. Please contact the administrator."
             consolation_message = "Our system is experiencing technical difficulties. We apologize for the inconvenience."
+           
+        # Save the assessment result to the database
+        # ✅ Save the result to the database if the user is logged in and inputs are valid
+        if request.user.is_authenticated and len(user_inputs) == 20:
+            AssessmentResult.objects.create(
+        user=request.user,
+        q1=user_inputs[0],
+        q2=user_inputs[1],
+        q3=user_inputs[2],
+        q4=user_inputs[3],
+        q5=user_inputs[4],
+        q6=user_inputs[5],
+        q7=user_inputs[6],
+        q8=user_inputs[7],
+        q9=user_inputs[8],
+        q10=user_inputs[9],
+        q11=user_inputs[10],
+        q12=user_inputs[11],
+        q13=user_inputs[12],
+        q14=user_inputs[13],
+        q15=user_inputs[14],
+        q16=user_inputs[15],
+        q17=user_inputs[16],
+        q18=user_inputs[17],
+        q19=user_inputs[18],
+        q20=user_inputs[19],
+        predicted_stage=predicted_stage_text,
+        main_message=main_result_message,
+        stage_description=stage_description,
+        doctor_type=doctor_type,
+        consolation_message=consolation_message,
+        )
 
+            messages.success(request, "Your assessment has been saved successfully.")
 
         # Prepare context for results.html with only the required data
         context = {
@@ -248,13 +282,14 @@ def upload_assessment(request):
             'next_steps_advice': next_steps_advice,
             'consolation_message': consolation_message, # New variable added to context
         }
-    return render(request, 'detection_app/results.html', context)
-
+    return redirect('/quiz/')
+@login_required
 def results(request):
     """
     This view is a fallback or for direct access to /results/.
     It provides default context for only the required fields.
     """
+    
     context = {
         'main_result_message': "No Data Submitted", # Default for direct access
         'potential_stage': "No Data Submitted",
@@ -271,22 +306,18 @@ def thank_you(request):
 
 # -------------------------- Auth Views ----------------------------
 
+
 def register_view(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, 'Account created successfully! Welcome to ParkPredict.')
-            return redirect('home')
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"Error in {field}: {error}")
-            messages.error(request, 'Please correct the errors below.')
+            return redirect('home')  # or wherever you want
     else:
-        form = CustomUserCreationForm()
+        form = UserCreationForm()
     return render(request, 'detection_app/register.html', {'form': form})
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -318,3 +349,4 @@ def logout_view(request):
 
 def demo_video_view(request):
     return render(request, 'detection_app/demo_video.html')
+

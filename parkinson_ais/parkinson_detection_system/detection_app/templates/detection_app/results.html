@@ -199,6 +199,7 @@
             margin-bottom: 1.8rem;
             background: linear-gradient(90deg, #6a0dad, #8a2de2); /* Gradient text color */
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             border-bottom: 3px solid #e9d5ff; /* Thicker border */
             padding-bottom: 0.8rem;
@@ -222,6 +223,7 @@
             font-weight: 900; /* Ultra bold */
             background: linear-gradient(45deg, #4a00e0, #a78bfa); /* Vibrant gradient */
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             padding: 1rem 2rem;
             border-radius: 1.5rem;
@@ -553,7 +555,7 @@
                 <strong>Disclaimer:</strong> This assessment is for informational purposes only and is not a substitute for professional medical advice.
             </div>
         </div>
-
+        
         <div class="results-container">
             <div class="results-card" style="animation-delay: 0.6s;">
                 <h2 class="results-section-title">Preliminary Indication & Potential Stage</h2>
@@ -578,7 +580,7 @@
                     </a>
                 </div>
             </div>
-
+        
             {# NEW: Consolation and Relaxation Section #}
             <div class="consolation-card">
                 <span class="consolation-icon">💖</span> {# Cute heart icon #}
@@ -591,6 +593,7 @@
                 <a href="{% url 'thank_you' %}" class="btn-all-done">All Done!</a>
             </div>
         </div>
+               
     </main>
 
     <footer>
