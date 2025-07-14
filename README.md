@@ -70,5 +70,5 @@ Please consult certified neurologists for medical advice.
 
 ## 🧑‍💼 Mentorship
 
-Developed as part of internship at **ProWall Technology Pvt. Ltd.**  
+Developed as part of internship at **ProWorld Technology Pvt. Ltd.**  
 Under the guidance of **Gokul Sir** – CEO & Project Mentor
