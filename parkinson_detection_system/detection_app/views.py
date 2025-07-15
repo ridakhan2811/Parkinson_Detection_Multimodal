@@ -13,8 +13,7 @@ import numpy as np
 import os
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import PatientProfile, AssessmentHistory
-from .forms import PatientProfileForm
+from .models import PatientProfile, AssessmentHistory 
 
 # Define paths for model and encoder
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "parkinsons_stage_model.joblib")
@@ -242,7 +241,7 @@ def upload_assessment(request):
             predicted_stage_text = "Not Available"
             stage_description = "The prediction model could not be loaded. Please contact the administrator."
             consolation_message = "Our system is experiencing technical difficulties. We apologize for the inconvenience."
-           
+        # Prepare context for results.html with only the required data  
         # Save the assessment result to the database
         # ✅ Save the result to the database if the user is logged in and inputs are valid
         if request.user.is_authenticated and len(user_inputs) == 20:
@@ -277,16 +276,20 @@ def upload_assessment(request):
 
             messages.success(request, "Your assessment has been saved successfully.")
 
-        # Prepare context for results.html with only the required data
         context = {
             'main_result_message': main_result_message,
             'potential_stage': predicted_stage_text,
             'stage_description': stage_description,
             'doctor_type': doctor_type,
             'next_steps_advice': next_steps_advice,
-            'consolation_message': consolation_message, # New variable added to context
+            'consolation_message': consolation_message,
         }
-    return render(request, 'detection_app/results.html',context)
+
+        return render(request, 'detection_app/results.html', context)
+
+    else:
+        # If accessed via GET, redirect to quiz form
+        return render(request, 'detection_app/quiz.html')  
    
 @login_required
 def results(request):
@@ -311,17 +314,20 @@ def thank_you(request):
 
 # -------------------------- Auth Views ----------------------------
 
+from .forms import CustomUserCreationForm
 
 def register_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('home')  # or wherever you want
+            return redirect('home')  # or another page
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'detection_app/register.html', {'form': form})
+
+
 
 
 def login_view(request):
@@ -358,7 +364,9 @@ def demo_video_view(request):
 @login_required
 def history_view(request):
     histories = AssessmentHistory.objects.filter(user=request.user).order_by('-date_taken')
-    return render(request, 'detection_app/history.html', {'histories': histories})
+    return render(request, 'detection_app/assessment_history.html', {'histories': histories})
+
+@login_required
 def spiral_detection(request):
     if request.method == 'POST':
         uploaded_file = request.FILES.get('spiral_image')
@@ -367,3 +375,15 @@ def spiral_detection(request):
             'uploaded_file': uploaded_file
         })
     return render(request, 'detection_app/spiral_detection.html')
+
+from itertools import chain
+from operator import attrgetter
+
+@login_required
+def history_view(request):
+    result_history = AssessmentResult.objects.filter(user=request.user)
+    manual_history = AssessmentHistory.objects.filter(user=request.user)
+
+    combined = sorted(chain(result_history, manual_history), key=attrgetter('created_at'), reverse=True)
+
+    return render(request, 'detection_app/assessment_history.html', {'histories': combined})

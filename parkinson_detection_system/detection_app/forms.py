@@ -1,58 +1,43 @@
 # detection_app/forms.py
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.models import User
 from django import forms
-from django import forms
-from .models import PatientProfile
-
-class PatientProfileForm(forms.ModelForm):
-    class Meta:
-        model = PatientProfile
-        fields = ['age', 'gender', 'contact_number']
-
 
 class CustomAuthenticationForm(AuthenticationForm):
     """
-    Custom form for user login to apply specific styling.
+    Custom form for user login with Tailwind CSS styling.
     """
     username = forms.CharField(
         widget=forms.TextInput(attrs={
             'placeholder': 'Enter your username',
-            'class': 'form-input-field' # This class will be applied
+            'class': 'form-input-field'
         })
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'placeholder': 'Enter your password',
-            'class': 'form-input-field' # This class will be applied
+            'class': 'form-input-field'
         })
     )
 
+
 class CustomUserCreationForm(UserCreationForm):
     """
-    Custom form for user registration to apply specific styling.
+    Custom registration form including email + Tailwind styling.
     """
-    # UserCreationForm already has username, password, password2.
-    # You might want to add email here if you need it for registration.
-    # For now, just ensuring existing fields get the class.
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
+        'placeholder': 'Enter your email',
+        'class': 'form-input-field',
+    }))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field_name in ['username', 'password', 'password2']: # password2 is 'Password confirmation'
-            if field_name in self.fields:
-                self.fields[field_name].widget.attrs.update({
-                    'class': 'form-input-field',
-                    'placeholder': self.fields[field_name].label # Use label as placeholder
-                })
-        # If you add an email field:
-        # self.fields['email'].widget.attrs.update({
-        #     'class': 'form-input-field',
-        #     'placeholder': 'Enter your email'
-        # })
+        for field_name in self.fields:
+            self.fields[field_name].widget.attrs.update({
+                'class': 'input-field',
+                'placeholder': self.fields[field_name].label,
+            })
 
-    class Meta(UserCreationForm.Meta):
-        model = UserCreationForm.Meta.model
-        fields = ('username',) + UserCreationForm.Meta.fields[1:] # Keep existing fields, adjust as needed if adding email
-        # If adding email:
-        # fields = ('username', 'email') + UserCreationForm.Meta.fields[1:]
-        
-       
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2')

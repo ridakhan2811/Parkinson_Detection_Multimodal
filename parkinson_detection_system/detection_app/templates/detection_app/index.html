@@ -217,11 +217,10 @@
         <div class="navbar-brand">PD ParkinsonAI</div>
         <nav class="navbar-links">
             <a href="{% url 'home' %}" class="font-bold text-purple-700">Home</a>
-            <a href="{% url 'upload_assessment' %}">Assessment</a>
+            <a href="{% url 'spiral_detection' %}">Assessment</a>
             <a href="#">About</a>
-            <a href="#">Contact</a>
-             
-                <a href="{% url 'history' %}">History</a>
+            <a href="#">Contact</a> 
+            <a href="{% url 'assessment_history' %}">History</a>
         </nav>
         <div class="navbar-auth">
             {% if user.is_authenticated %}
@@ -256,7 +255,7 @@
             </p>
             <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
                 {# "Start Assessment" button no longer directly links to quiz, serves as a general call to action #}
-                <a href="#" class="btn-primary inline-block">Start Assessment</a>
+                <a href="{% url 'spiral_detection' %}" class="btn-primary inline-block">Start Assessment</a>
                 
                 {# NEW: "Take Quiz" button - this now explicitly links to the quiz #}
                 <a href="{% url 'quiz' %}" class="btn-quiz inline-block">Take Quiz</a>

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import history_view
 
 urlpatterns = [
     path('', views.home, name='home'),  # Home page
@@ -13,4 +14,5 @@ urlpatterns = [
     path('demo-video/', views.demo_video_view, name='demo_video'),  # Demo video
     path('spiral-detection/', views.spiral_detection, name='spiral_detection'),
     path('history/', views.history_view, name='history'),
+    path('history/', history_view, name='assessment_history'),
 ]

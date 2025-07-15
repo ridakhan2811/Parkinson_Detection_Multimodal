@@ -26,12 +26,11 @@
       max-width: 450px;
       width: 100%;
       text-align: center;
-      animation: fadeInScale 0.6s ease-out forwards;
     }
     .input-field {
       width: 100%;
       padding: 0.75rem 1rem;
-      margin-bottom: 1.25rem;
+      margin-top: 0.25rem;
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
       font-size: 1rem;
@@ -52,6 +51,7 @@
       transition: background-color 0.3s ease, transform 0.2s ease;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       width: 100%;
+      margin-top: 1rem;
     }
     .btn-primary:hover {
       background-color: #1a202c;
@@ -65,10 +65,6 @@
     .auth-link:hover {
       color: #4f46e5;
       text-decoration: underline;
-    }
-    @keyframes fadeInScale {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
@@ -84,20 +80,30 @@
     <h2 class="text-3xl font-bold text-gray-800 mb-4">Create Account</h2>
     <p class="text-gray-600 mb-8">Join us to start your health assessment journey</p>
 
-    <form action="/register/" method="POST">
+    <form method="POST" action="{% url 'register' %}">
       {% csrf_token %}
-      <input type="text" name="username" class="input-field" placeholder="Username" required />
-      <input type="email" name="email" class="input-field" placeholder="Email" required />
-      <input type="password" name="password1" class="input-field" placeholder="Password" required />
-      <input type="password" name="password2" class="input-field" placeholder="Confirm Password" required />
+
+      {% if form.non_field_errors %}
+        <p class="text-red-600 text-sm mb-4">{{ form.non_field_errors }}</p>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="mb-4 text-left">
+          <label class="block text-gray-700 font-medium mb-1">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
       <button type="submit" class="btn-primary">Create Account</button>
     </form>
 
     <div class="mt-8 text-gray-600 text-sm">
       Already have an account?
-      <a href="/login" class="auth-link">Sign in</a>
+      <a href="{% url 'login' %}" class="auth-link">Sign in</a>
     </div>
   </div>
-  
 </body>
 </html>
