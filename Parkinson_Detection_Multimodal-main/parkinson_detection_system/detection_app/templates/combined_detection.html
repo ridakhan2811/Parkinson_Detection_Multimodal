@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Parkinson's Combined Detection</title>
+  <link rel="stylesheet" href="{% static 'detection_app/css/combined_detection.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+  <style>
+    /* Futuristic animated background */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(270deg, #0f0c29, #302b63, #24243e);
+      background-size: 600% 600%;
+      animation: backgroundShift 12s ease infinite;
+      color: #fff;
+    }
+
+    @keyframes backgroundShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 60px auto;
+      padding: 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 30px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      transition: transform 0.5s, box-shadow 0.5s;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+    }
+
+    .card h2 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    input[type="file"] {
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      width: 100%;
+      background: #fff;
+      color: #333;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #00feba, #5b548a);
+      color: #fff;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.4s;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #5b548a, #00feba);
+      transform: scale(1.05);
+    }
+
+    /* Floating AI particles background */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .particles span {
+      position: absolute;
+      display: block;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      animation: float 10s linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100vh) scale(0.5);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="particles">
+  {% for i in " "|ljust:50 %}
+    <span style="
+      width: {{ forloop.counter|add:5 }}px;
+      height: {{ forloop.counter|add:5 }}px;
+      left: {{ forloop.counter|add:50 }}%;
+      animation-delay: {{ forloop.counter0|add:"0.1"|floatformat:1 }}s;
+    "></span>
+  {% endfor %}
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Spiral Image Upload</h2>
+    <form method="post" enctype="multipart/form-data" action="{% url 'spiral_detection' %}">
+      {% csrf_token %}
+      <input type="file" name="spiral_image" accept="image/*" required>
+      <button type="submit">Detect Spiral</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Voice File Upload</h2>
+    <form method="post" enctype="multipart/form-data" action="{% url 'voice_upload' %}">
+      {% csrf_token %}
+      <input type="file" name="voice_file" accept="audio/*" required>
+      <button type="submit">Detect Voice</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Posture Video Upload</h2>
+    <form method="post" enctype="multipart/form-data" action="{% url 'posture_upload' %}">
+      {% csrf_token %}
+      <input type="file" name="posture_video" accept="video/*" required>
+      <button type="submit">Detect Posture</button>
+    </form>
+  </div>
+
+</div>
+
+</body>
+</html>
