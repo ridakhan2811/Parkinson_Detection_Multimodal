@@ -52,12 +52,12 @@ It integrates image classification, audio signal analysis, pose estimation, and 
 
 ## 👥 Team Members
 
-- **Rida Khan** – Spiral Drawing & Image Processing  
-- **Rutuja Deshmukh** – Voice Feature Extraction & ML Modeling  
-- **Ayush Shinde** – Database Design & Backend Integration  
-- **Atharva Deore** – Pose Estimation & Posture Monitoring  
-- **Sanchit Sonawane** – UI/UX & Frontend with Django  
-- **Harshit Sable** – Backend APIs & Django Framework
+- **Rida Khan**
+- **Rutuja Deshmukh** 
+- **Ayush Shinde**  
+- **Atharva Deore** 
+- **Sanchit Sonawane** 
+- **Harshit Sable** 
 
 ---
 
